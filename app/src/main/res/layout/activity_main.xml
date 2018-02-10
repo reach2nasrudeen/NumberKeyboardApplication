@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/contentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -11,13 +11,120 @@
         android:id="@+id/textContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:padding="15dp"
-        android:text="Hello World!" />
+        android:textSize="22sp" />
 
-    <com.app.myapplication.NumberKeyboard
-        android:id="@+id/keyboard"
+
+    <LinearLayout style="@style/top_container">
+
+        <TextView
+            android:id="@+id/key7"
+            style="@style/key"
+            android:text="@string/seven" />
+
+        <TextView
+            android:id="@+id/key8"
+            style="@style/key"
+            android:text="@string/eight" />
+
+        <TextView
+            android:id="@+id/key9"
+            style="@style/key"
+            android:text="@string/nine" />
+
+        <TextView
+            android:id="@+id/keyMultiply"
+            style="@style/key"
+            android:background="@color/colorBlue"
+            android:maxLines="2"
+            android:text="X/ Times"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <LinearLayout style="@style/top_container">
+
+        <TextView
+            android:id="@+id/key4"
+            style="@style/key"
+            android:text="@string/four" />
+
+        <TextView
+            android:id="@+id/key5"
+            style="@style/key"
+            android:text="@string/five" />
+
+        <TextView
+            android:id="@+id/key6"
+            style="@style/key"
+            android:text="@string/six" />
+
+        <ImageView
+            android:id="@+id/btnReset"
+            style="@style/key"
+            android:background="@color/red"
+            android:src="@drawable/ic_reset_selection" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="15dp"
-        app:keyboardType="integer" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:orientation="vertical">
+
+            <LinearLayout style="@style/bottom_continer">
+
+                <TextView
+                    android:id="@+id/key1"
+                    style="@style/key"
+                    android:text="@string/one" />
+
+                <TextView
+                    android:id="@+id/key2"
+                    style="@style/key"
+                    android:text="@string/two" />
+
+                <TextView
+                    android:id="@+id/key3"
+                    style="@style/key"
+                    android:text="@string/three" />
+
+            </LinearLayout>
+
+            <LinearLayout style="@style/bottom_continer">
+
+                <TextView
+                    android:id="@+id/keySpl0"
+                    style="@style/key"
+                    android:text="@string/double_zero" />
+
+                <TextView
+                    android:id="@+id/key0"
+                    style="@style/key"
+                    android:text="@string/zero" />
+
+                <ImageView
+                    android:id="@+id/keyBack"
+                    style="@style/key"
+                    android:src="@drawable/ic_backspace"
+                    android:text="C" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnAdd"
+            style="@style/key"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Add" />
+    </LinearLayout>
 </LinearLayout>
