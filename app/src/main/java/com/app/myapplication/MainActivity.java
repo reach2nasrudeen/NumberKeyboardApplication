@@ -1,21 +1,24 @@
 package com.app.myapplication;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.NumberFormat;
+import com.crashlytics.android.Crashlytics;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import io.fabric.sdk.android.Fabric;
+
 public class MainActivity extends AppCompatActivity /*implements NumberKeyboardListener*/ {
-    private View contentLayout;
     private List<TextView> numericKeys;
     private TextView textContent;
     private TextView textSplZero;
@@ -24,36 +27,44 @@ public class MainActivity extends AppCompatActivity /*implements NumberKeyboardL
 
     private ImageView btnBackSpc;
     private ImageView btnReset;
-    private ImageView btn;
-    private int amount;
-    private NumberFormat nf = NumberFormat.getInstance();
     private int MAX_ALLOWED_AMOUNT = 99999999;
-    private boolean isMultiply = false;
-    private NumberKeyboardListener listener;
-    private int itemCode = 0;
-    private int quantity = 0;
+    private boolean isMultiply;
+    private int itemCode;
+    private int quantity;
+    private double singleMultiplier = 10.0;
+    private double doubleMultiplier = 100.0;
+    private double multiplier = 10.0;
+
+    public double getMultiplier() {
+        return multiplier;
+    }
+
+    public void setMultiplier(double multiplier) {
+        this.multiplier = multiplier;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
         setTitle("Keyboard integer");
         initView();
         setupListeners();
-        Log.e("ScreenWidth", "" + getScreenWidth());
-        Log.e("Content Width", "" + contentLayout.getWidth());
+        onReset();
+    }
+
+    public static int convertPixelsToDp(Context context, float px) {
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        return (int) (px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
     public static int getScreenWidth() {
         return Resources.getSystem().getDisplayMetrics().widthPixels;
     }
 
-    public static int getScreenHeight() {
-        return Resources.getSystem().getDisplayMetrics().heightPixels;
-    }
-
     private void initView() {
-        contentLayout = findViewById(R.id.contentLayout);
         numericKeys = new ArrayList<>(10);
         numericKeys.add((TextView) findViewById(R.id.key0));
         numericKeys.add((TextView) findViewById(R.id.key1));
@@ -71,6 +82,21 @@ public class MainActivity extends AppCompatActivity /*implements NumberKeyboardL
         btnAdd = findViewById(R.id.btnAdd);
         btnXTimes = findViewById(R.id.keyMultiply);
         btnReset = findViewById(R.id.btnReset);
+
+        setupKeyWidth();
+    }
+
+    private void setupKeyWidth() {
+        int px = convertPixelsToDp(this, getScreenWidth() / 4);
+        for (TextView key : numericKeys) {
+            key.getLayoutParams().width = px;
+        }
+        btnXTimes.getLayoutParams().width = px;
+        btnReset.getLayoutParams().width = px;
+        btnAdd.getLayoutParams().width = px;
+        textSplZero.getLayoutParams().width = px;
+        btnBackSpc.getLayoutParams().width = px;
+        btnBackSpc.requestLayout();
     }
 
     /**
@@ -81,9 +107,12 @@ public class MainActivity extends AppCompatActivity /*implements NumberKeyboardL
         for (int i = 0; i < numericKeys.size(); i++) {
             final TextView key = numericKeys.get(i);
             final int number = i;
+            key.getLayoutParams().width = convertPixelsToDp(this, getScreenWidth() / 4);
+            key.requestLayout();
             key.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    setMultiplier(singleMultiplier);
                     onNumberClicked(number);
                 }
             });
@@ -92,7 +121,8 @@ public class MainActivity extends AppCompatActivity /*implements NumberKeyboardL
         textSplZero.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onSpecialZeroClicked();
+                setMultiplier(doubleMultiplier);
+                onNumberClicked(0);
             }
         });
         btnBackSpc.setOnClickListener(new View.OnClickListener() {
@@ -121,11 +151,12 @@ public class MainActivity extends AppCompatActivity /*implements NumberKeyboardL
         });
     }
 
+    @SuppressLint("SetTextI18n")
     private void onMultiply() {
         if (!isMultiply) {
             isMultiply = true;
+            textContent.setText(textContent.getText() + "X");
         }
-        textContent.setText(textContent.getText() + "X");
     }
 
     private void onAdd() {
@@ -142,13 +173,13 @@ public class MainActivity extends AppCompatActivity /*implements NumberKeyboardL
 
     private void onNumberClicked(int number) {
         if (isMultiply) {
-            int newAmount = (int) (quantity * 10.0 + number);
+            int newAmount = (int) (quantity * getMultiplier() + number);
             if (newAmount <= MAX_ALLOWED_AMOUNT) {
                 quantity = newAmount;
                 showQuantity();
             }
         } else {
-            int newAmount = (int) (itemCode * 10.0 + number);
+            int newAmount = (int) (itemCode * getMultiplier() + number);
             if (newAmount <= MAX_ALLOWED_AMOUNT) {
                 itemCode = newAmount;
                 showItem();
@@ -166,34 +197,19 @@ public class MainActivity extends AppCompatActivity /*implements NumberKeyboardL
         textContent.setText(String.format("%d X %d", itemCode, quantity));
     }
 
-    public void onSpecialZeroClicked() {
-        if (isMultiply) {
-            int newAmount = (int) (quantity * 10.0 + 00);
-            if (newAmount <= MAX_ALLOWED_AMOUNT) {
-                quantity = newAmount;
-                showQuantity();
-            }
-        } else {
-            int newAmount = (int) (itemCode * 10.0 + 00);
-            if (newAmount <= MAX_ALLOWED_AMOUNT) {
-                itemCode = newAmount;
-                showItem();
-            }
-        }
-    }
 
     public void onRightAuxButtonClicked() {
         if (isMultiply) {
             if (quantity == 0) {
                 isMultiply = false;
-                itemCode = (int) (itemCode / 10.0);
+                itemCode = (int) (itemCode / singleMultiplier);
                 showItem();
             } else {
-                quantity = (int) (quantity / 10.0);
+                quantity = (int) (quantity / singleMultiplier);
                 showQuantity();
             }
         } else {
-            itemCode = (int) (itemCode / 10.0);
+            itemCode = (int) (itemCode / singleMultiplier);
             showItem();
         }
     }
